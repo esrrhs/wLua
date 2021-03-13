@@ -72,12 +72,12 @@ void wlog(const char *header, const char *file, const char *func, int pos, const
 
     va_start(ap, fmt);
     vfprintf(pLog, fmt, ap);
-    fprintf(pLog, "\n\n");
+    fprintf(pLog, "\n");
     va_end(ap);
 
     va_start(ap, fmt);
     vprintf(fmt, ap);
-    printf("\n\n");
+    printf("\n");
     va_end(ap);
 
     fclose(pLog);
@@ -131,7 +131,7 @@ void add_result(const std::string &str) {
 
 void check_hash_table(lua_State *L, Table *t, unsigned int nhsize) {
     int total_size = allocsizenode(t);
-    if (total_size < g_config_map_check_min_size || total_size >= (int) nhsize) {
+    if (total_size < g_config_map_check_min_size) {
         WLOG("check_hash_table no need %p %d %d %d", t, total_size, nhsize, g_config_map_check_min_size);
         return;
     }
@@ -188,11 +188,12 @@ void check_hash_table(lua_State *L, Table *t, unsigned int nhsize) {
     const char *source = p->source ? getstr(p->source) : "=?";
 
     char buff[512] = {0};
-    snprintf(buff, sizeof(buff) - 1, "table hash collision max=%d total=%d at %s:%d\n", maxline, total, source, line);
+    snprintf(buff, sizeof(buff) - 1, "table hash collision max=%d total=%d at %s:%d", maxline, total, source, line);
     add_result(buff);
 }
 
 extern "C" void new_luaH_resize(lua_State *L, Table *t, unsigned int nasize, unsigned int nhsize) {
+    WLOG("new_luaH_resize start %p %u %u", t, nasize, nhsize);
     luaH_resize(L, t, nasize, nhsize);
     if (g_config_map_check != 0) {
         check_hash_table(L, t, nhsize);
