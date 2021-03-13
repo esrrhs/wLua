@@ -90,7 +90,7 @@ std::set<std::string> g_msg;
 std::string g_config_msg_file_name = "wlua_check.log";
 int g_config_map_check = 1;
 int g_config_map_check_min_size = 128;
-int g_config_map_check_scale = 50; // 50%
+int g_config_map_check_scale = 20; // 20%
 
 extern "C" void config_msg_file_name(const char *s) {
     g_config_msg_file_name = s;
@@ -129,10 +129,10 @@ void add_result(const std::string &str) {
     fclose(fptr);
 }
 
-void check_hash_table(lua_State *L, Table *t, unsigned int nhsize) {
+void check_hash_table(lua_State *L, Table *t) {
     int total_size = allocsizenode(t);
     if (total_size < g_config_map_check_min_size) {
-        WLOG("check_hash_table no need %p %d %d %d", t, total_size, nhsize, g_config_map_check_min_size);
+        WLOG("check_hash_table no need %p %d %d", t, total_size, g_config_map_check_min_size);
         return;
     }
     Node *n = t->node;
@@ -192,10 +192,10 @@ void check_hash_table(lua_State *L, Table *t, unsigned int nhsize) {
     add_result(buff);
 }
 
-extern "C" void new_luaH_resize(lua_State *L, Table *t, unsigned int nasize, unsigned int nhsize) {
-    WLOG("new_luaH_resize start %p %u %u", t, nasize, nhsize);
+extern "C" void new_luaH_resize(lua_State *L, Table *t, unsigned int nasize,
+                                unsigned int nhsize) {
     luaH_resize(L, t, nasize, nhsize);
     if (g_config_map_check != 0) {
-        check_hash_table(L, t, nhsize);
+        check_hash_table(L, t);
     }
 }
