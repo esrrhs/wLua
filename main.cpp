@@ -28,19 +28,18 @@
 #include <unordered_set>
 #include <set>
 
-#include "lprefix.h"
-#include "lua.hpp"
-
 extern "C" {
-#include "ldebug.h"
-#include "ldo.h"
-#include "lgc.h"
-#include "lmem.h"
-#include "lobject.h"
-#include "lstate.h"
-#include "lstring.h"
-#include "ltable.h"
-#include "lvm.h"
+#include "lua/lprefix.h"
+#include "lua/lua.hpp"
+#include "lua/ldebug.h"
+#include "lua/ldo.h"
+#include "lua/lgc.h"
+#include "lua/lmem.h"
+#include "lua/lobject.h"
+#include "lua/lstate.h"
+#include "lua/lstring.h"
+#include "lua/ltable.h"
+#include "lua/lvm.h"
 }
 
 const int open_debug = 0;
@@ -87,13 +86,25 @@ extern "C" Node *mainposition(const Table *t, const TValue *key);
 extern "C" int currentline(CallInfo *ci);
 
 std::set<std::string> g_msg;
-std::string g_config_msg_file_name = "wlua_check.log";
+std::string g_config_msg_file_name = "wlua_result.log";
+
+time_t g_config_inter_last_time = 0;
+int g_config_inter_time = 60;
+
 int g_config_map_check = 1;
 int g_config_map_check_min_size = 128;
 int g_config_map_check_scale = 20; // 20%
 
+int g_config_map_getset = 1;
+int g_config_map_getset_get_num = 0;
+int g_config_map_getset_set_num = 0;
+
 extern "C" void config_msg_file_name(const char *s) {
     g_config_msg_file_name = s;
+}
+
+extern "C" void config_inter_time(int n) {
+    g_config_inter_time = n;
 }
 
 extern "C" void config_map_check(int n) {
@@ -108,8 +119,12 @@ extern "C" void config_map_check_scale(int n) {
     g_config_map_check_scale = n;
 }
 
-void add_result(const std::string &str) {
-    if (g_msg.find(str) != g_msg.end()) {
+extern "C" void config_map_getset(int n) {
+    g_config_map_getset = n;
+}
+
+void add_result(const std::string &str, bool uniq) {
+    if (uniq && g_msg.find(str) != g_msg.end()) {
         return;
     }
     g_msg.insert(str);
@@ -189,7 +204,22 @@ void check_hash_table(lua_State *L, Table *t) {
 
     char buff[512] = {0};
     snprintf(buff, sizeof(buff) - 1, "table hash collision max=%d total=%d at %s:%d", maxline, total, source, line);
-    add_result(buff);
+    add_result(buff, true);
+}
+
+void check_inter(lua_State *L) {
+    time_t clock = time(0);
+    if (clock > g_config_inter_last_time + g_config_inter_time) {
+        return;
+    }
+    g_config_inter_last_time = clock;
+
+    char buff[512] = {0};
+    snprintf(buff, sizeof(buff) - 1, "table get=%d set=%d", g_config_map_getset_get_num, g_config_map_getset_set_num);
+    add_result(buff, false);
+
+    g_config_map_getset_get_num = 0;
+    g_config_map_getset_set_num = 0;
 }
 
 extern "C" void new_luaH_resize(lua_State *L, Table *t, unsigned int nasize,
@@ -198,4 +228,19 @@ extern "C" void new_luaH_resize(lua_State *L, Table *t, unsigned int nasize,
     if (g_config_map_check != 0) {
         check_hash_table(L, t);
     }
+}
+
+extern "C" const TValue *new_luaH_get(Table *t, const TValue *key) {
+    if (g_config_map_getset != 0) {
+        g_config_map_getset_get_num++;
+    }
+    return luaH_get(t, key);
+}
+
+extern "C" TValue *new_luaH_set(lua_State *L, Table *t, const TValue *key) {
+    check_inter(L);
+    if (g_config_map_getset != 0) {
+        g_config_map_getset_set_num++;
+    }
+    return luaH_set(L, t, key);
 }
