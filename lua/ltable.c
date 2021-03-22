@@ -114,7 +114,7 @@ static int l_hashfloat (lua_Number n) {
 ** returns the 'main' position of an element in a table (that is, the index
 ** of its hash value)
 */
-Node *mainposition (const Table *t, const TValue *key) {
+/* [wLua] static*/ Node *mainposition (const Table *t, const TValue *key) {
   switch (ttype(key)) {
     case LUA_TNUMINT:
       return hashint(t, ivalue(key));
