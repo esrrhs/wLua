@@ -4,7 +4,8 @@ wLua是监视Lua虚拟内部状态的工具。
 # 特性
 * C++编写，支持Linux平台
 * 通过附加到其他进程上，进行监视
-* 支持对table resize的检查
+* 支持对table resize冲突检查
+* 支持对table get set次数统计
 
 # 编译
 * 运行```./build.sh```编译，生成libwlua.so

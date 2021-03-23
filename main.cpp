@@ -42,6 +42,8 @@ extern "C" {
 #include "lua/lvm.h"
 }
 
+extern "C" const TValue *luaH_get(Table *t, const TValue *key);
+
 const int open_debug = 0;
 
 #define WLOG(...) if (open_debug) {wlog("[DEBUG] ", __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__);}
@@ -82,10 +84,15 @@ void wlog(const char *header, const char *file, const char *func, int pos, const
     fclose(pLog);
 }
 
+// important
+extern "C" void set_lua_nilobject(TValue *p) {
+    luaO_nilobject_p = p;
+}
+
 extern "C" Node *mainposition(const Table *t, const TValue *key);
 extern "C" int currentline(CallInfo *ci);
 
-std::set<std::string> g_msg;
+std::set <std::string> g_msg;
 std::string g_config_msg_file_name = "wlua_result.log";
 
 time_t g_config_inter_last_time = 0;
@@ -209,7 +216,7 @@ void check_hash_table(lua_State *L, Table *t) {
 
 void check_inter(lua_State *L) {
     time_t clock = time(0);
-    if (clock > g_config_inter_last_time + g_config_inter_time) {
+    if (clock < g_config_inter_last_time + g_config_inter_time) {
         return;
     }
     g_config_inter_last_time = clock;

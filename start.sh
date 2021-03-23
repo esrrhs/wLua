@@ -5,8 +5,25 @@ if [ $# != 1 ]; then
 fi
 PID=$1
 
-#FUNC="luaH_resize luaH_get luaH_set"
-FUNC="luaH_get"
+./hookso dlopen $PID ./libwlua.so
+if [ $? -ne 0 ]; then
+  echo "$PID dlopen libwlua.so fail"
+  exit 1
+fi
+
+ADDR=$(gdb -p $PID -ex "p (long)&luaO_nilobject_" --batch | grep "1 = " | awk '{print $3}')
+if [ $? -ne 0 ]; then
+  echo "$PID get luaO_nilobject_ addr fail"
+  exit 1
+fi
+echo "set_lua_nilobject ADDR="$ADDR
+./hookso call $PID libwlua.so set_lua_nilobject i=$ADDR
+if [ $? -ne 0 ]; then
+  echo "$PID call set_lua_nilobject fail"
+  exit 1
+fi
+
+FUNC="luaH_resize luaH_get luaH_set"
 
 for i in $FUNC; do
   ADDR=$(gdb -p $PID -ex "p (long)$i" --batch | grep "1 = " | awk '{print $3}')
