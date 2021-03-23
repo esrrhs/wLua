@@ -4,7 +4,7 @@ wLua是监视Lua虚拟内部状态的工具。
 # 特性
 * C++编写，支持Linux平台
 * 通过附加到其他进程上，进行监视
-* 支持对table resize冲突检查
+* 支持对table rehash冲突检查
 * 支持对table get set次数统计
 
 # 编译
@@ -22,6 +22,7 @@ wLua是监视Lua虚拟内部状态的工具。
 # ./start.sh 1234
 ```
 然后查看当前目录下的wlua_check.log 
+### table rehash 冲突
 ```
 [2021.3.13,8:30:8]table hash collision max=64 total=64 at @test.lua:17
 [2021.3.13,8:30:8]table hash collision max=128 total=128 at @test.lua:17
@@ -34,3 +35,13 @@ wLua是监视Lua虚拟内部状态的工具。
 [2021.3.13,8:30:11]table hash collision max=16384 total=16384 at @test.lua:17
 ```
 max=hashtable里最大的冲突链表长度，total=hashtable总共的元素个数。当max >= 20%*total会告警
+### table get set次数
+```
+[2021.3.23,4:2:35]table get=330077 set=176
+[2021.3.23,4:3:35]table get=338269 set=190
+[2021.3.23,4:4:36]table get=338269 set=177
+[2021.3.23,4:5:36]table get=330077 set=176
+[2021.3.23,4:6:36]table get=330077 set=176
+[2021.3.23,4:7:36]table get=330077 set=176
+[2021.3.23,4:8:38]table get=343700 set=177
+```
