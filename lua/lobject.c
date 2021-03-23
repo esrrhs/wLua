@@ -29,8 +29,8 @@
 #include "lvm.h"
 
 
-
-LUAI_DDEF const TValue luaO_nilobject_ = {NILCONSTANT};
+// [wLua]
+LUAI_DDEF TValue * luaO_nilobject_p = 0;
 
 
 /*

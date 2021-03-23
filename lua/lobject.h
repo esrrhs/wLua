@@ -522,10 +522,11 @@ typedef struct Table {
 /*
 ** (address of) a fixed nil value
 */
-#define luaO_nilobject		(&luaO_nilobject_)
+// [wLua]
+#define luaO_nilobject		(luaO_nilobject_p)
 
-
-LUAI_DDEC const TValue luaO_nilobject_;
+// [wLua]
+LUAI_DDEC TValue * luaO_nilobject_p;
 
 /* size of buffer for 'luaO_utf8esc' function */
 #define UTF8BUFFSZ	8
