@@ -232,7 +232,8 @@ GCObject *luaC_newobj (lua_State *L, int tt, size_t sz) {
 ** to appropriate list to be visited (and turned black) later. (Open
 ** upvalues are already linked in 'headuv' list.)
 */
-static void reallymarkobject (global_State *g, GCObject *o) {
+// [wLua]
+void reallymarkobject (global_State *g, GCObject *o) {
  reentry:
   white2gray(o);
   switch (o->tt) {
@@ -1040,8 +1041,8 @@ static lu_mem sweepstep (lua_State *L, global_State *g,
   return 0;
 }
 
-
-static lu_mem singlestep (lua_State *L) {
+// [wLua]
+lu_mem singlestep (lua_State *L) {
   global_State *g = G(L);
   switch (g->gcstate) {
     case GCSpause: {
