@@ -23,7 +23,7 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-FUNC="luaH_resize luaH_get luaH_set"
+FUNC="luaH_resize luaH_get luaH_set luaC_fullgc luaC_step singlestep reallymarkobject"
 
 for i in $FUNC; do
   ADDR=$(gdb -p $PID -ex "p (long)$i" --batch | grep "1 = " | awk '{print $3}')

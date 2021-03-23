@@ -10,11 +10,13 @@ for i = 1, 30000 do
     table.insert(src, id)
 end
 
+local index = 1
 while true do
     local dst = {}
     local begin = os.time()
     for k, v in ipairs(src) do
-        dst[v] = 1
+        dst[v] = tostring(index)
+        index = index + 1
     end
     print("cost " .. os.time() - begin)
 end
