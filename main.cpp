@@ -115,6 +115,16 @@ int g_config_gc_markobj_num = 0;
 int g_config_gc_newobj_num = 0;
 int g_config_gc_freeobj_num = 0;
 
+int g_config_string = 1;
+int g_config_string_alloc = 0;
+int g_config_string_alloc_cache = 0;
+int g_config_string_alloc_short = 0;
+size_t g_config_string_alloc_short_size = 0;
+int g_config_string_alloc_short_reuse = 0;
+size_t g_config_string_alloc_short_reuse_size = 0;
+int g_config_string_alloc_long = 0;
+size_t g_config_string_alloc_long_size = 0;
+
 extern "C" void config_msg_file_name(const char *s) {
     g_config_msg_file_name = s;
 }
@@ -141,6 +151,10 @@ extern "C" void config_map_getset(int n) {
 
 extern "C" void config_gc(int n) {
     g_config_gc = n;
+}
+
+extern "C" void config_string(int n) {
+    g_config_string = n;
 }
 
 void add_result(const std::string &str, bool uniq) {
@@ -244,7 +258,7 @@ void check_inter(lua_State *L) {
         g_config_map_getset_set_num = 0;
     }
 
-    if (g_config_map_getset != 0) {
+    if (g_config_gc != 0) {
         snprintf(buff, sizeof(buff) - 1,
                  "gc fullgc=%d step=%d singlestep=%d singlestep-freesize=%dKB marked-obj=%d new-obj=%d free-obj=%d",
                  g_config_gc_fullgc_num, g_config_gc_step_num, g_config_gc_singlestep_num,
@@ -258,6 +272,24 @@ void check_inter(lua_State *L) {
         g_config_gc_markobj_num = 0;
         g_config_gc_newobj_num = 0;
         g_config_gc_freeobj_num = 0;
+    }
+
+    if (g_config_string != 0) {
+        snprintf(buff, sizeof(buff) - 1,
+                 "string alloc=%d cache=%d short=%d short-reuse=%d long=%d short-size=%dKB short-reuse-size=%dKB long-size=%dKB",
+                 g_config_string_alloc, g_config_string_alloc_cache, g_config_string_alloc_short,
+                 g_config_string_alloc_short_reuse, g_config_string_alloc_long,
+                 (int) (g_config_string_alloc_short_size / 1024),
+                 (int) (g_config_string_alloc_short_reuse_size / 1024), (int) (g_config_string_alloc_long_size / 1024));
+        add_result(buff, false);
+        g_config_string_alloc = 0;
+        g_config_string_alloc_cache = 0;
+        g_config_string_alloc_short = 0;
+        g_config_string_alloc_short_reuse = 0;
+        g_config_string_alloc_long = 0;
+        g_config_string_alloc_short_size = 0;
+        g_config_string_alloc_short_reuse_size = 0;
+        g_config_string_alloc_long_size = 0;
     }
 }
 
@@ -287,4 +319,14 @@ extern "C" void new_luaC_step(lua_State *L) {
 extern "C" GCObject *new_luaC_newobj(lua_State *L, int tt, size_t sz) {
     check_inter(L);
     return luaC_newobj(L, tt, sz);
+}
+
+extern "C" TString *new_luaS_new(lua_State *L, const char *str) {
+    check_inter(L);
+    return luaS_new(L, str);
+}
+
+extern "C" TString *new_luaS_newlstr(lua_State *L, const char *str, size_t l) {
+    check_inter(L);
+    return luaS_newlstr(L, str, l);
 }
