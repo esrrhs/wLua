@@ -162,7 +162,7 @@ void add_result(const std::string &str, bool uniq) {
     fclose(fptr);
 }
 
-void check_hash_table(lua_State *L, Table *t) {
+extern "C" void check_hash_table(lua_State *L, Table *t) {
     int total_size = allocsizenode(t);
     if (total_size < g_config_map_check_min_size) {
         WLOG("check_hash_table no need %p %d %d", t, total_size, g_config_map_check_min_size);
@@ -255,60 +255,25 @@ void check_inter(lua_State *L) {
     }
 }
 
-extern "C" void new_luaH_resize(lua_State *L, Table *t, unsigned int nasize,
-                                unsigned int nhsize) {
+extern "C" void new_luaH_resize(lua_State *L, Table *t, unsigned int nasize, unsigned int nhsize) {
     luaH_resize(L, t, nasize, nhsize);
-    if (g_config_map_check != 0) {
-        check_hash_table(L, t);
-    }
 }
 
 extern "C" const TValue *new_luaH_get(Table *t, const TValue *key) {
-    if (g_config_map_getset != 0) {
-        g_config_map_getset_get_num++;
-    }
     return luaH_get(t, key);
 }
 
 extern "C" TValue *new_luaH_set(lua_State *L, Table *t, const TValue *key) {
     check_inter(L);
-    if (g_config_map_getset != 0) {
-        g_config_map_getset_set_num++;
-    }
     return luaH_set(L, t, key);
 }
 
 extern "C" void new_luaC_fullgc(lua_State *L, int isemergency) {
     check_inter(L);
-    if (g_config_gc != 0) {
-        g_config_gc_fullgc_num++;
-    }
     luaC_fullgc(L, isemergency);
 }
 
 extern "C" void new_luaC_step(lua_State *L) {
     check_inter(L);
-    if (g_config_gc != 0) {
-        g_config_gc_step_num++;
-    }
     luaC_step(L);
-}
-
-extern "C" lu_mem singlestep(lua_State *L);
-extern "C" lu_mem new_singlestep(lua_State *L) {
-    check_inter(L);
-    lu_mem ret = singlestep(L);
-    if (g_config_gc != 0) {
-        g_config_gc_singlestep_num++;
-        g_config_gc_singlestep_size += ret;
-    }
-    return ret;
-}
-
-extern "C" void reallymarkobject(global_State *g, GCObject *o);
-extern "C" void new_reallymarkobject(global_State *g, GCObject *o) {
-    if (g_config_gc != 0) {
-        g_config_gc_markobj_num++;
-    }
-    reallymarkobject(g, o);
 }
