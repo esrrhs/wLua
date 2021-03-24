@@ -329,6 +329,8 @@ static void setnodevector (lua_State *L, Table *t, unsigned int size) {
   }
 }
 
+extern int g_config_map_check;
+extern void check_hash_table(lua_State *L, Table *t);
 
 void luaH_resize (lua_State *L, Table *t, unsigned int nasize,
                                           unsigned int nhsize) {
@@ -362,6 +364,11 @@ void luaH_resize (lua_State *L, Table *t, unsigned int nasize,
   }
   if (oldhsize > 0)  /* not the dummy node? */
     luaM_freearray(L, nold, cast(size_t, oldhsize)); /* free old hash */
+
+    // [wLua]
+    if (g_config_map_check != 0) {
+        check_hash_table(L, t);
+    }
 }
 
 
@@ -567,7 +574,14 @@ const TValue *luaH_getstr (Table *t, TString *key) {
 /*
 ** main search function
 */
+extern int g_config_map_getset;
+extern int g_config_map_getset_get_num;
 const TValue *luaH_get (Table *t, const TValue *key) {
+    // [wLua]
+    if (g_config_map_getset != 0) {
+        g_config_map_getset_get_num++;
+    }
+
   switch (ttype(key)) {
     case LUA_TSHRSTR: return luaH_getshortstr(t, tsvalue(key));
     case LUA_TNUMINT: return luaH_getint(t, ivalue(key));
@@ -588,7 +602,12 @@ const TValue *luaH_get (Table *t, const TValue *key) {
 ** beware: when using this function you probably need to check a GC
 ** barrier and invalidate the TM cache.
 */
+extern int g_config_map_getset_set_num;
 TValue *luaH_set (lua_State *L, Table *t, const TValue *key) {
+    // [wLua]
+    if (g_config_map_getset != 0) {
+        g_config_map_getset_set_num++;
+    }
   const TValue *p = luaH_get(t, key);
   if (p != luaO_nilobject)
     return cast(TValue *, p);

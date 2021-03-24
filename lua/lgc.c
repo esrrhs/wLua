@@ -232,8 +232,13 @@ GCObject *luaC_newobj (lua_State *L, int tt, size_t sz) {
 ** to appropriate list to be visited (and turned black) later. (Open
 ** upvalues are already linked in 'headuv' list.)
 */
-// [wLua]
-void reallymarkobject (global_State *g, GCObject *o) {
+extern int g_config_gc;
+extern int g_config_gc_markobj_num;
+static void reallymarkobject (global_State *g, GCObject *o) {
+    // [wLua]
+    if (g_config_gc != 0) {
+        g_config_gc_markobj_num++;
+    }
  reentry:
   white2gray(o);
   switch (o->tt) {
@@ -1041,8 +1046,8 @@ static lu_mem sweepstep (lua_State *L, global_State *g,
   return 0;
 }
 
-// [wLua]
-lu_mem singlestep (lua_State *L) {
+
+static lu_mem singlestep (lua_State *L) {
   global_State *g = G(L);
   switch (g->gcstate) {
     case GCSpause: {
@@ -1126,7 +1131,14 @@ static l_mem getdebt (global_State *g) {
 /*
 ** performs a basic GC step when collector is running
 */
+extern int g_config_gc_step_num;
+extern int g_config_gc_singlestep_num;
+extern lu_mem g_config_gc_singlestep_size;
 void luaC_step (lua_State *L) {
+    // [wLua]
+    if (g_config_gc != 0) {
+        g_config_gc_step_num++;
+    }
   global_State *g = G(L);
   l_mem debt = getdebt(g);  /* GC deficit (be paid now) */
   if (!g->gcrunning) {  /* not running? */
@@ -1135,6 +1147,11 @@ void luaC_step (lua_State *L) {
   }
   do {  /* repeat until pause or enough "credit" (negative debt) */
     lu_mem work = singlestep(L);  /* perform one single step */
+        // [wLua]
+        if (g_config_gc != 0) {
+            g_config_gc_singlestep_num++;
+            g_config_gc_singlestep_size += work;
+        }
     debt -= work;
   } while (debt > -GCSTEPSIZE && g->gcstate != GCSpause);
   if (g->gcstate == GCSpause)
@@ -1156,7 +1173,12 @@ void luaC_step (lua_State *L) {
 ** to sweep all objects to turn them back to white (as white has not
 ** changed, nothing will be collected).
 */
+extern int g_config_gc_fullgc_num;
 void luaC_fullgc (lua_State *L, int isemergency) {
+    // [wLua]
+    if (g_config_gc != 0) {
+        g_config_gc_fullgc_num++;
+    }
   global_State *g = G(L);
   lua_assert(g->gckind == KGC_NORMAL);
   if (isemergency) g->gckind = KGC_EMERGENCY;  /* set flag */
