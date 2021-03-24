@@ -6,6 +6,7 @@ wLua是监视Lua虚拟内部状态的工具。
 * 通过附加到其他进程上，进行监视
 * 支持对table rehash冲突检查
 * 支持对table get set次数统计
+* 支持对gc数据统计
 
 # 编译
 * 运行```./build.sh```编译，生成libwlua.so
@@ -45,3 +46,10 @@ max=hashtable里最大的冲突链表长度，total=hashtable总共的元素个�
 [2021.3.23,4:7:36]table get=330077 set=176
 [2021.3.23,4:8:38]table get=343700 set=177
 ```
+### gc数据
+```
+[2021.3.24,3:23:12]gc fullgc=0 step=300 singlestep=5640 singlestep-freesize=11931KB marked-obj=99678
+[2021.3.24,3:24:12]gc fullgc=0 step=250 singlestep=4700 singlestep-freesize=9942KB marked-obj=83065
+[2021.3.24,3:25:12]gc fullgc=0 step=300 singlestep=5640 singlestep-freesize=11931KB marked-obj=99678
+```
+fullgc是全量gc次数，step是单步gc调用次数，singlestep是单次单步gc调用次数，singlestep-freesize是单步gc总共回收的内存大小，marked-obj是标记的对象个数
