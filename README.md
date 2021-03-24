@@ -39,17 +39,10 @@ max=hashtable里最大的冲突链表长度，total=hashtable总共的元素个�
 ### table get set次数
 ```
 [2021.3.23,4:2:35]table get=330077 set=176
-[2021.3.23,4:3:35]table get=338269 set=190
-[2021.3.23,4:4:36]table get=338269 set=177
-[2021.3.23,4:5:36]table get=330077 set=176
-[2021.3.23,4:6:36]table get=330077 set=176
-[2021.3.23,4:7:36]table get=330077 set=176
-[2021.3.23,4:8:38]table get=343700 set=177
 ```
 ### gc数据
 ```
-[2021.3.24,3:23:12]gc fullgc=0 step=300 singlestep=5640 singlestep-freesize=11931KB marked-obj=99678
-[2021.3.24,3:24:12]gc fullgc=0 step=250 singlestep=4700 singlestep-freesize=9942KB marked-obj=83065
-[2021.3.24,3:25:12]gc fullgc=0 step=300 singlestep=5640 singlestep-freesize=11931KB marked-obj=99678
+[2021.3.24,3:23:12]gc fullgc=0 step=300 singlestep=5640 singlestep-freesize=11931KB marked-obj=99678 new-obj=330389 free-obj=360036
 ```
 fullgc是全量gc次数，step是单步gc调用次数，singlestep是单次单步gc调用次数，singlestep-freesize是单步gc总共回收的内存大小，marked-obj是标记为黑色（使用中）的对象个数
+new-obj是新建的obj，free-obj是释放的obj
