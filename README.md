@@ -52,4 +52,4 @@ max=hashtable里最大的冲突链表长度，total=hashtable总共的元素个�
 [2021.3.24,3:24:12]gc fullgc=0 step=250 singlestep=4700 singlestep-freesize=9942KB marked-obj=83065
 [2021.3.24,3:25:12]gc fullgc=0 step=300 singlestep=5640 singlestep-freesize=11931KB marked-obj=99678
 ```
-fullgc是全量gc次数，step是单步gc调用次数，singlestep是单次单步gc调用次数，singlestep-freesize是单步gc总共回收的内存大小，marked-obj是标记的对象个数
+fullgc是全量gc次数，step是单步gc调用次数，singlestep是单次单步gc调用次数，singlestep-freesize是单步gc总共回收的内存大小，marked-obj是标记为黑色（使用中）的对象个数
