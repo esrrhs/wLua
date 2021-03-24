@@ -38,11 +38,18 @@ wLua是监视Lua虚拟内部状态的工具。
 max=hashtable里最大的冲突链表长度，total=hashtable总共的元素个数。当max >= 20%*total会告警
 ### table get set次数
 ```
-[2021.3.23,4:2:35]table get=330077 set=176
+[2021.3.24,7:58:8]table get=1023102 set=360613
+[2021.3.24,7:59:8]table get=1023766 set=360613
+[2021.3.24,8:0:8]table get=1022092 set=360613
+[2021.3.24,8:1:8]table get=1022588 set=360613
+[2021.3.24,8:2:8]table get=1019782 set=360613
 ```
 ### gc数据
 ```
-[2021.3.24,3:23:12]gc fullgc=0 step=300 singlestep=5640 singlestep-freesize=11931KB marked-obj=99678 new-obj=330389 free-obj=360036
+[2021.3.24,7:58:8]gc fullgc=0 step=250 singlestep=4700 singlestep-freesize=9942KB marked-obj=83065 new-obj=331237 free-obj=300028
+[2021.3.24,7:59:8]gc fullgc=0 step=300 singlestep=5640 singlestep-freesize=11931KB marked-obj=99678 new-obj=331569 free-obj=360034
+[2021.3.24,8:0:8]gc fullgc=0 step=250 singlestep=4700 singlestep-freesize=9942KB marked-obj=83065 new-obj=330732 free-obj=300028
+[2021.3.24,8:1:8]gc fullgc=0 step=300 singlestep=5640 singlestep-freesize=11931KB marked-obj=99678 new-obj=330982 free-obj=360036
 ```
 fullgc是全量gc次数，step是单步gc调用次数，singlestep是单次单步gc调用次数，singlestep-freesize是单步gc总共回收的内存大小，marked-obj是标记为黑色（使用中）的对象个数
-new-obj是新建的obj，free-obj是释放的obj
+new-obj是新建的对象个数，free-obj是释放的对象个数
