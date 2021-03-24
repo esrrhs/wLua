@@ -112,6 +112,8 @@ int g_config_gc_step_num = 0;
 int g_config_gc_singlestep_num = 0;
 lu_mem g_config_gc_singlestep_size = 0;
 int g_config_gc_markobj_num = 0;
+int g_config_gc_newobj_num = 0;
+int g_config_gc_freeobj_num = 0;
 
 extern "C" void config_msg_file_name(const char *s) {
     g_config_msg_file_name = s;
@@ -243,15 +245,19 @@ void check_inter(lua_State *L) {
     }
 
     if (g_config_map_getset != 0) {
-        snprintf(buff, sizeof(buff) - 1, "gc fullgc=%d step=%d singlestep=%d singlestep-freesize=%dKB marked-obj=%d",
+        snprintf(buff, sizeof(buff) - 1,
+                 "gc fullgc=%d step=%d singlestep=%d singlestep-freesize=%dKB marked-obj=%d new-obj=%d free-obj=%d",
                  g_config_gc_fullgc_num, g_config_gc_step_num, g_config_gc_singlestep_num,
-                 (int) (g_config_gc_singlestep_size / 1024), g_config_gc_markobj_num);
+                 (int) (g_config_gc_singlestep_size / 1024), g_config_gc_markobj_num, g_config_gc_newobj_num,
+                 g_config_gc_freeobj_num);
         add_result(buff, false);
         g_config_gc_fullgc_num = 0;
         g_config_gc_step_num = 0;
         g_config_gc_singlestep_num = 0;
         g_config_gc_singlestep_size = 0;
         g_config_gc_markobj_num = 0;
+        g_config_gc_newobj_num = 0;
+        g_config_gc_freeobj_num = 0;
     }
 }
 
@@ -276,4 +282,9 @@ extern "C" void new_luaC_fullgc(lua_State *L, int isemergency) {
 extern "C" void new_luaC_step(lua_State *L) {
     check_inter(L);
     luaC_step(L);
+}
+
+extern "C" GCObject *new_luaC_newobj(lua_State *L, int tt, size_t sz) {
+    check_inter(L);
+    return luaC_newobj(L, tt, sz);
 }

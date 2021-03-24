@@ -205,7 +205,13 @@ void luaC_fix (lua_State *L, GCObject *o) {
 ** create a new collectable object (with given type and size) and link
 ** it to 'allgc' list.
 */
+extern int g_config_gc;
+extern int g_config_gc_newobj_num;
 GCObject *luaC_newobj (lua_State *L, int tt, size_t sz) {
+    // [wLua]
+    if (g_config_gc != 0) {
+        g_config_gc_newobj_num++;
+    }
   global_State *g = G(L);
   GCObject *o = cast(GCObject *, luaM_newobject(L, novariant(tt), sz));
   o->marked = luaC_white(g);
@@ -232,7 +238,6 @@ GCObject *luaC_newobj (lua_State *L, int tt, size_t sz) {
 ** to appropriate list to be visited (and turned black) later. (Open
 ** upvalues are already linked in 'headuv' list.)
 */
-extern int g_config_gc;
 extern int g_config_gc_markobj_num;
 static void reallymarkobject (global_State *g, GCObject *o) {
     // [wLua]
@@ -698,8 +703,12 @@ static void freeLclosure (lua_State *L, LClosure *cl) {
   luaM_freemem(L, cl, sizeLclosure(cl->nupvalues));
 }
 
-
+extern int g_config_gc_freeobj_num;
 static void freeobj (lua_State *L, GCObject *o) {
+    // [wLua]
+    if (g_config_gc != 0) {
+        g_config_gc_freeobj_num++;
+    }
   switch (o->tt) {
     case LUA_TPROTO: luaF_freeproto(L, gco2p(o)); break;
     case LUA_TLCL: {
