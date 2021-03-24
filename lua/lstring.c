@@ -160,11 +160,25 @@ void luaS_remove (lua_State *L, TString *ts) {
   tb->nuse--;
 }
 
+extern int g_config_string;
+extern int g_config_string_alloc;
+extern int g_config_string_alloc_cache;
+extern int g_config_string_alloc_short;
+extern size_t g_config_string_alloc_short_size;
+extern int g_config_string_alloc_short_reuse;
+extern size_t g_config_string_alloc_short_reuse_size;
+extern int g_config_string_alloc_long;
+extern size_t g_config_string_alloc_long_size;
 
 /*
 ** checks whether short string exists and reuses it or creates a new one
 */
 static TString *internshrstr (lua_State *L, const char *str, size_t l) {
+    // [wLua]
+    if (g_config_string != 0) {
+        g_config_string_alloc_short++;
+        g_config_string_alloc_short_size += l;
+    }
   TString *ts;
   global_State *g = G(L);
   unsigned int h = luaS_hash(str, l, g->seed);
@@ -176,6 +190,11 @@ static TString *internshrstr (lua_State *L, const char *str, size_t l) {
       /* found! */
       if (isdead(g, ts))  /* dead (but not collected yet)? */
         changewhite(ts);  /* resurrect it */
+        // [wLua]
+        if (g_config_string != 0) {
+            g_config_string_alloc_short_reuse++;
+            g_config_string_alloc_short_reuse_size += l;
+        }
       return ts;
     }
   }
@@ -197,9 +216,18 @@ static TString *internshrstr (lua_State *L, const char *str, size_t l) {
 ** new string (with explicit length)
 */
 TString *luaS_newlstr (lua_State *L, const char *str, size_t l) {
+    // [wLua]
+    if (g_config_string != 0) {
+        g_config_string_alloc++;
+    }
   if (l <= LUAI_MAXSHORTLEN)  /* short string? */
     return internshrstr(L, str, l);
   else {
+      // [wLua]
+      if (g_config_string != 0) {
+          g_config_string_alloc_long++;
+          g_config_string_alloc_long_size += l;
+      }
     TString *ts;
     if (l >= (MAX_SIZE - sizeof(TString))/sizeof(char))
       luaM_toobig(L);
@@ -221,8 +249,14 @@ TString *luaS_new (lua_State *L, const char *str) {
   int j;
   TString **p = G(L)->strcache[i];
   for (j = 0; j < STRCACHE_M; j++) {
-    if (strcmp(str, getstr(p[j])) == 0)  /* hit? */
-      return p[j];  /* that is it */
+    if (strcmp(str, getstr(p[j])) == 0)  /* hit? */{
+        // [wLua]
+        if (g_config_string != 0) {
+            g_config_string_alloc++;
+            g_config_string_alloc_cache++;
+        }
+        return p[j];  /* that is it */
+    }
   }
   /* normal route */
   for (j = STRCACHE_M - 1; j > 0; j--)
