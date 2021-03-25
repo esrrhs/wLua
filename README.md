@@ -64,3 +64,6 @@ new-obj是新建的对象个数，free-obj是释放的对象个数
 ```
 alloc是分配字符串次数，cache是命中缓存次数，short是分配短字符串次数，short-reuse是命中短字符次数，long是分配长字符串次数，short-size、short-reuse-size、long-size分别是对应的字符串长度。
 注意这里short-reuse很大但是short-reuse-size为0，说明有很多分配空字符串的行为
+
+## 其他
+[lua全家桶](https://github.com/esrrhs/lua-family-bucket)
