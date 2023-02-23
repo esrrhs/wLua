@@ -1,4 +1,8 @@
 # wLua
+[<img src="https://img.shields.io/github/license/esrrhs/wLua">](https://github.com/esrrhs/wLua)
+[<img src="https://img.shields.io/github/languages/top/esrrhs/wLua">](https://github.com/esrrhs/wLua)
+[<img src="https://img.shields.io/github/actions/workflow/status/esrrhs/wLua/cmake.yml?branch=master">](https://github.com/esrrhs/wLua/actions)
+
 wLua是监视Lua虚拟内部状态的工具。
 
 # 特性
