@@ -6,7 +6,7 @@
 
 > **A runtime state monitoring and diagnostic tool for running Lua virtual machines.**
 
-[English](README.md) | [中文说明](README_CN.md)
+[English](README.md) | [Chinese](README_CN.md)
 
 ---
 
@@ -121,5 +121,5 @@ tail -f wlua_result.log
 
 ---
 
-## Related Projects / 其他
-* [lua全家桶 / Lua Family Bucket](https://github.com/esrrhs/lua-family-bucket)
+## Related Projects
+* [Lua Family Bucket](https://github.com/esrrhs/lua-family-bucket)

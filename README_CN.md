@@ -121,5 +121,5 @@ tail -f wlua_result.log
 
 ---
 
-## 相关项目 / Related Projects
-* [lua全家桶 / Lua Family Bucket](https://github.com/esrrhs/lua-family-bucket)
+## 相关项目
+* [lua全家桶](https://github.com/esrrhs/lua-family-bucket)
