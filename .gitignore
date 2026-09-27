@@ -30,3 +30,25 @@
 *.exe
 *.out
 *.app
+
+# CMake build directories & generated files
+build/
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+*.cmake
+
+# wLua logs
+*.log
+wlua_result.log
+wlua_check.log
+wlua.log
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store

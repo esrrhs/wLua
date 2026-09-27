@@ -1,32 +1,16 @@
-#include <string>
-#include <list>
-#include <vector>
-#include <map>
-#include <stdint.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <iostream>
-#include <string>
+#include <algorithm>
+#include <cassert>
+#include <cerrno>
+#include <cstdarg>
+#include <cstdint>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <typeinfo>
-#include <stdio.h>
-#include <time.h>
-#include <stdarg.h>
-#include <assert.h>
-#include <math.h>
-#include <sys/time.h>
-#include <signal.h>
-#include <unistd.h>
-#include <errno.h>
-#include <unordered_map>
-#include <fcntl.h>
-#include <sstream>
-#include <algorithm>
-#include <vector>
-#include <unordered_set>
+#include <ctime>
 #include <set>
+#include <string>
+#include <sys/time.h>
+#include <unistd.h>
 
 extern "C" {
 #include "lua/lprefix.h"
@@ -50,27 +34,25 @@ const int open_debug = 0;
 #define WERR(...) if (open_debug) {wlog("[ERROR] ", __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__);}
 
 void wlog(const char *header, const char *file, const char *func, int pos, const char *fmt, ...) {
-    FILE *pLog = NULL;
-    time_t clock1;
-    struct tm *tptr;
-    va_list ap;
-
-    pLog = fopen("wlua.log", "a+");
-    if (pLog == NULL) {
+    FILE *pLog = fopen("wlua.log", "a+");
+    if (pLog == nullptr) {
         return;
     }
 
-    clock1 = time(0);
-    tptr = localtime(&clock1);
+    time_t clock1 = time(nullptr);
+    struct tm tptr;
+    localtime_r(&clock1, &tptr);
 
     struct timeval tv;
-    gettimeofday(&tv, NULL);
+    gettimeofday(&tv, nullptr);
 
-    fprintf(pLog, "===========================[%d.%d.%d, %d.%d.%d %llu]%s:%d,%s:===========================\n%s",
-            tptr->tm_year + 1990, tptr->tm_mon + 1,
-            tptr->tm_mday, tptr->tm_hour, tptr->tm_min,
-            tptr->tm_sec, (long long) ((tv.tv_sec) * 1000 + (tv.tv_usec) / 1000), file, pos, func, header);
+    fprintf(pLog, "===========================[%d.%d.%d, %d.%d.%d %lld]%s:%d,%s:===========================\n%s",
+            tptr.tm_year + 1900, tptr.tm_mon + 1,
+            tptr.tm_mday, tptr.tm_hour, tptr.tm_min,
+            tptr.tm_sec, static_cast<long long>(tv.tv_sec * 1000LL + tv.tv_usec / 1000LL),
+            file, pos, func, header);
 
+    va_list ap;
     va_start(ap, fmt);
     vfprintf(pLog, fmt, ap);
     fprintf(pLog, "\n");
@@ -84,6 +66,15 @@ void wlog(const char *header, const char *file, const char *func, int pos, const
     fclose(pLog);
 }
 
+// Fallback nilobject to prevent null pointer dereference before set_lua_nilobject is invoked
+static const TValue s_default_nilobject = { { nullptr }, LUA_TNIL };
+
+__attribute__((constructor)) static void wlua_init() {
+    if (!luaO_nilobject_p) {
+        luaO_nilobject_p = const_cast<TValue*>(&s_default_nilobject);
+    }
+}
+
 // important
 extern "C" void set_lua_nilobject(TValue *p) {
     luaO_nilobject_p = p;
@@ -92,7 +83,7 @@ extern "C" void set_lua_nilobject(TValue *p) {
 extern "C" Node *mainposition(const Table *t, const TValue *key);
 extern "C" int currentline(CallInfo *ci);
 
-std::set <std::string> g_msg;
+std::set<std::string> g_msg;
 std::string g_config_msg_file_name = "wlua_result.log";
 
 time_t g_config_inter_last_time = 0;
@@ -169,12 +160,13 @@ void add_result(const std::string &str, bool uniq) {
         return;
     }
 
-    time_t clock = time(0);
-    struct tm *tptr = localtime(&clock);
+    time_t clock = time(nullptr);
+    struct tm tptr;
+    localtime_r(&clock, &tptr);
     fprintf(fptr, "[%d.%d.%d,%d:%d:%d]%s\n",
-            tptr->tm_year + 1900, tptr->tm_mon + 1,
-            tptr->tm_mday, tptr->tm_hour, tptr->tm_min,
-            tptr->tm_sec, str.c_str());
+            tptr.tm_year + 1900, tptr.tm_mon + 1,
+            tptr.tm_mday, tptr.tm_hour, tptr.tm_min,
+            tptr.tm_sec, str.c_str());
     fclose(fptr);
 }
 
@@ -197,12 +189,16 @@ extern "C" void check_hash_table(lua_State *L, Table *t) {
         WLOG("check_hash_table no func %p", t);
         return;
     }
-    Closure *cl = ttisclosure(func) ? clvalue(func) : NULL;
+    if (!isLua(ci) || !ttisLclosure(func)) {
+        WLOG("check_hash_table not Lua closure %p", t);
+        return;
+    }
+    LClosure *cl = clLvalue(func);
     if (!cl) {
         WLOG("check_hash_table no Closure %p", t);
         return;
     }
-    Proto *p = cl->l.p;
+    Proto *p = cl->p;
     if (!p) {
         WLOG("check_hash_table no Proto %p", t);
         return;
@@ -233,7 +229,7 @@ extern "C" void check_hash_table(lua_State *L, Table *t) {
     if (maxline < total * g_config_map_check_scale / 100) {
         return;
     }
-    int line = (ci && isLua(ci)) ? currentline(ci) : -1;
+    int line = currentline(ci);
     const char *source = p->source ? getstr(p->source) : "=?";
 
     char buff[512] = {0};
@@ -242,7 +238,8 @@ extern "C" void check_hash_table(lua_State *L, Table *t) {
 }
 
 void check_inter(lua_State *L) {
-    time_t clock = time(0);
+    (void)L;
+    time_t clock = time(nullptr);
     if (clock < g_config_inter_last_time + g_config_inter_time) {
         return;
     }
@@ -262,7 +259,7 @@ void check_inter(lua_State *L) {
         snprintf(buff, sizeof(buff) - 1,
                  "gc fullgc=%d step=%d singlestep=%d singlestep-freesize=%dKB marked-obj=%d new-obj=%d free-obj=%d",
                  g_config_gc_fullgc_num, g_config_gc_step_num, g_config_gc_singlestep_num,
-                 (int) (g_config_gc_singlestep_size / 1024), g_config_gc_markobj_num, g_config_gc_newobj_num,
+                 static_cast<int>(g_config_gc_singlestep_size / 1024), g_config_gc_markobj_num, g_config_gc_newobj_num,
                  g_config_gc_freeobj_num);
         add_result(buff, false);
         g_config_gc_fullgc_num = 0;
@@ -279,8 +276,9 @@ void check_inter(lua_State *L) {
                  "string alloc=%d cache=%d short=%d short-reuse=%d long=%d short-size=%dKB short-reuse-size=%dKB long-size=%dKB",
                  g_config_string_alloc, g_config_string_alloc_cache, g_config_string_alloc_short,
                  g_config_string_alloc_short_reuse, g_config_string_alloc_long,
-                 (int) (g_config_string_alloc_short_size / 1024),
-                 (int) (g_config_string_alloc_short_reuse_size / 1024), (int) (g_config_string_alloc_long_size / 1024));
+                 static_cast<int>(g_config_string_alloc_short_size / 1024),
+                 static_cast<int>(g_config_string_alloc_short_reuse_size / 1024),
+                 static_cast<int>(g_config_string_alloc_long_size / 1024));
         add_result(buff, false);
         g_config_string_alloc = 0;
         g_config_string_alloc_cache = 0;
@@ -294,6 +292,7 @@ void check_inter(lua_State *L) {
 }
 
 extern "C" void new_luaH_resize(lua_State *L, Table *t, unsigned int nasize, unsigned int nhsize) {
+    check_inter(L);
     luaH_resize(L, t, nasize, nhsize);
 }
 

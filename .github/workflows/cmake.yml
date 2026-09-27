@@ -1,26 +1,29 @@
 name: CI
 
-on: [push]
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-    
+
     steps:
-    - uses: actions/checkout@v1
-        
-    - name: prepare-lua
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
       run: |
-        sudo apt-get install libreadline-dev -y
-        sudo wget https://www.lua.org/ftp/lua-5.3.4.tar.gz
-        sudo tar -xf lua-5.3.4.tar.gz
-        cd lua-5.3.4
-        sudo make linux
-        sudo make install
-        
-    - name: make
+        sudo apt-get update
+        sudo apt-get install -y cmake build-essential gdb
+
+    - name: Build wLua
       run: |
-        sudo cmake .
-        sudo make clean
-        sudo make
+        ./build.sh
+
+    - name: Verify build artifacts
+      run: |
+        test -f libwlua.so
+        echo "libwlua.so generated successfully"
