@@ -26,7 +26,7 @@
 * **Compiler & Build Tools**: CMake (>= 3.12), C/C++ compiler (GCC or Clang)
 * **Debugger**: `gdb` (used by `start.sh` to resolve symbol addresses in the target process)
 * **Process Injector**: [hookso](https://github.com/esrrhs/hookso) (shared library injector)
-* **Permissions**: Ensure ptrace permission is enabled for attaching to target processes (`sudo sysctl kernel.yama.ptrace_scope=0` if needed).
+* **Permissions**: Attaching requires ptrace access. `start.sh` diagnoses Yama / uid / dumpable restrictions and will not change `kernel.yama.ptrace_scope` or elevate privileges for you. See [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md).
 
 ## Build
 Run the build script:
@@ -49,6 +49,24 @@ The compiled shared library `libwlua.so` will be created in the project root dir
 ./start.sh <PID>
 ```
 4. Check the real-time statistics and collision alerts in `wlua_result.log`.
+
+
+## Compatibility and startup diagnostics
+`start.sh` checks the host and target **before** injection: Linux x86_64, a live accessible process, `libwlua.so` / `hookso` / `gdb`, matching ELF architecture, ptrace policy, a PUC-Rio Lua 5.3 image, and the required internal symbols.
+
+Unsupported or unknown targets are refused. A Lua 5.3 version string or soname is **not** proof of ABI compatibility with the vendored Lua 5.3.4 layouts (`LUA_32BITS`, custom patches, and other 5.3.x builds can still crash the target). The script will not change `kernel.yama.ptrace_scope`, elevate privileges, or build missing artifacts.
+
+Dry-run (diagnostics only, no injection):
+```bash
+./start.sh --dry-run <PID>
+```
+
+Full details, exit codes, and unproven limits: [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md).
+
+Shell regression tests (no compiler, no real `gdb -p`, no real injection):
+```bash
+bash tests/preflight_test.sh
+```
 
 ## Examples
 Run the demo script `test.lua`. In this script, poorly chosen keys lead to 100% hash collisions in Lua 5.3, making rehash and table operations significantly slower:

@@ -26,7 +26,7 @@
 * **编译器与构建工具**：CMake (>= 3.12)，C/C++ 编译器 (GCC >= 4.8 或 Clang)
 * **调试器**：`gdb`（用于 `start.sh` 解析目标进程的符号地址）
 * **注入工具**：[hookso](https://github.com/esrrhs/hookso)（共享库注入与符号替换工具）
-* **系统权限**：请确保拥有附加进程的 ptrace 权限（非 root 用户必要时可执行 `sudo sysctl kernel.yama.ptrace_scope=0`）。
+* **系统权限**：附加目标需要 ptrace 权限。`start.sh` 会诊断 Yama / uid / dumpable 等限制，但不会代为修改 `kernel.yama.ptrace_scope` 或提升权限。详见 [docs/COMPATIBILITY_CN.md](docs/COMPATIBILITY_CN.md)。
 
 ## 编译
 直接运行编译脚本：
@@ -49,6 +49,24 @@ cp build/libwlua.so ./
 ./start.sh <PID>
 ```
 4. 在当前目录下查看输出的统计与告警日志 `wlua_result.log`。
+
+
+## 兼容性检查与启动诊断
+`start.sh` 会在注入**之前**检查主机与目标：Linux x86_64、进程是否存活且可访问、`libwlua.so` / `hookso` / `gdb`、ELF 架构是否一致、ptrace 策略、是否为 PUC-Rio Lua 5.3 映像，以及所需内部符号是否可见。
+
+未知或不支持的目标会被拒绝。仅凭 Lua 5.3 的版本字符串或 soname **不能**证明与仓库内 Lua 5.3.4 布局 ABI 兼容（`LUA_32BITS`、定制补丁以及其他 5.3.x 构建在注入后仍可能导致目标崩溃）。脚本不会修改 `kernel.yama.ptrace_scope`、不会提升权限，也不会代为编译缺失的产物。
+
+仅做诊断、不执行注入：
+```bash
+./start.sh --dry-run <PID>
+```
+
+完整说明、退出码与未证明的限制见 [docs/COMPATIBILITY_CN.md](docs/COMPATIBILITY_CN.md)。
+
+Shell 回归测试（不编译、不真正 `gdb -p`、不真正注入）：
+```bash
+bash tests/preflight_test.sh
+```
 
 ## 示例
 运行演示脚本 `test.lua`。在该脚本中，因键值构造特征导致哈希槽位发生 100% 冲突，致使哈希表操作与 rehash 耗时显著增加：

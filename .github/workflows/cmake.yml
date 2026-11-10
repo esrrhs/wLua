@@ -27,3 +27,12 @@ jobs:
       run: |
         test -f libwlua.so
         echo "libwlua.so generated successfully"
+
+  preflight-test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Run preflight diagnostics tests
+      run: bash tests/preflight_test.sh
